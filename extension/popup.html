@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width">
+  <title>LLMwiki</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 360px;
+      background: #1e1e2e;
+      color: #cdd6f4;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+    }
+
+    .popup {
+      display: flex;
+      flex-direction: column;
+      min-height: 100px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .header-icon { font-size: 16px; }
+    .header-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #cdd6f4;
+      letter-spacing: 0.02em;
+    }
+
+    /* Article metadata */
+    .meta { padding: 14px 16px 0; }
+
+    .title-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #cdd6f4;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.4;
+      resize: none;
+      overflow: hidden;
+      font-family: inherit;
+    }
+    .title-input::placeholder { color: #585b70; }
+
+    .url-line {
+      margin-top: 4px;
+      font-size: 12px;
+      color: #585b70;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Sections */
+    .section { padding: 12px 16px 0; }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6c7086;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    /* Note textarea */
+    .note-input {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 6px;
+      color: #cdd6f4;
+      font-size: 13px;
+      font-family: inherit;
+      line-height: 1.5;
+      padding: 8px 10px;
+      resize: none;
+      outline: none;
+      min-height: 60px;
+      transition: border-color 0.15s;
+    }
+    .note-input::placeholder { color: #45475a; }
+    .note-input:focus { border-color: rgba(99,102,241,0.5); }
+
+    /* Highlights list */
+    .highlights-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .highlight-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      background: rgba(99,102,241,0.08);
+      border: 1px solid rgba(99,102,241,0.15);
+      border-radius: 6px;
+      padding: 7px 8px;
+    }
+
+    .highlight-text {
+      flex: 1;
+      font-size: 12px;
+      color: #a6adc8;
+      line-height: 1.5;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+
+    .highlight-remove {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      color: #585b70;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 2px;
+      border-radius: 3px;
+      transition: color 0.15s;
+    }
+    .highlight-remove:hover { color: #f38ba8; }
+
+    .highlights-empty {
+      font-size: 12px;
+      color: #45475a;
+      font-style: italic;
+    }
+
+    /* Save button */
+    .footer { padding: 14px 16px; }
+
+    .save-btn {
+      width: 100%;
+      padding: 10px;
+      background: #6366f1;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      font-family: inherit;
+    }
+    .save-btn:hover:not(:disabled) { background: #818cf8; }
+    .save-btn:disabled { opacity: 0.6; cursor: default; }
+
+    /* Status states */
+    .status {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+      gap: 10px;
+      text-align: center;
+    }
+
+    .status-icon { font-size: 28px; }
+    .status-title { font-size: 15px; font-weight: 600; }
+    .status-sub { font-size: 12px; color: #6c7086; }
+    .status-note { font-size: 11px; color: #45475a; }
+
+    /* Concept list in success view */
+    .concept-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .concept-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #a6adc8;
+    }
+    .concept-item::before {
+      content: '·';
+      color: #6366f1;
+      font-weight: bold;
+    }
+
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid rgba(99,102,241,0.3);
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="popup">
+
+    <!-- Header -->
+    <div class="header">
+      <span class="header-icon">✦</span>
+      <span class="header-title">LLMwiki</span>
+    </div>
+
+    <!-- Form view -->
+    <div id="view-form">
+      <div class="meta">
+        <textarea id="title-input" class="title-input" rows="2" placeholder="Article title"></textarea>
+        <div id="url-display" class="url-line"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Personal Note</div>
+        <textarea id="note-input" class="note-input" placeholder="Why is this interesting?"></textarea>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Highlights</div>
+        <div id="highlights-list" class="highlights-list"></div>
+      </div>
+
+      <div class="footer">
+        <button id="save-btn" class="save-btn">Save to LLMwiki</button>
+      </div>
+    </div>
+
+    <!-- Saving state (writing sources file) -->
+    <div id="view-saving" class="status hidden">
+      <div class="spinner"></div>
+      <div class="status-title">Saving…</div>
+      <div class="status-sub">Writing to vault</div>
+    </div>
+
+    <!-- Processing state (Claude extracting concepts) -->
+    <div id="view-processing" class="status hidden">
+      <div class="spinner"></div>
+      <div class="status-title">Extracting concepts…</div>
+      <div class="status-sub" id="processing-elapsed">0s</div>
+      <div class="status-note">Closing this popup won't stop the ingestion</div>
+    </div>
+
+    <!-- Success state -->
+    <div id="view-success" class="status hidden">
+      <div class="status-icon">✓</div>
+      <div class="status-title" id="success-title">Concepts extracted</div>
+      <div id="concept-list" class="concept-list"></div>
+    </div>
+
+    <!-- Already saved state -->
+    <div id="view-duplicate" class="status hidden">
+      <div class="status-icon">◎</div>
+      <div class="status-title">Already saved</div>
+      <div class="status-sub">This article is already in your vault</div>
+    </div>
+
+    <!-- Error state -->
+    <div id="view-error" class="status hidden">
+      <div class="status-icon">⚠</div>
+      <div class="status-title">Bridge server not running</div>
+      <div class="status-sub">Start it: <code>python3 ~/llm-wiki-scrapper/bridge/server.py</code></div>
+    </div>
+
+    <!-- Content error state -->
+    <div id="view-no-content" class="status hidden">
+      <div class="status-icon">⚠</div>
+      <div class="status-title">Page content unavailable</div>
+      <div class="status-sub">Reload the page and try again</div>
+    </div>
+
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.llmwiki.bridge</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/weitihuang/llm-wiki-scrapper/bridge/server.py</string>
+    </array>
+
+    <!-- KeepAlive: true restarts the server automatically after any crash -->
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/weitihuang/LLMwiki/bridge-stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/weitihuang/LLMwiki/bridge-error.log</string>
+
+    <!-- Ensure the claude CLI (installed via homebrew or npm) is on PATH -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+</dict>
+</plist>

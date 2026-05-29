@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "LLMwiki",
+  "version": "1.0.0",
+  "description": "Save articles to your LLMwiki vault with one click",
+
+  "permissions": ["activeTab", "scripting", "storage", "tabs"],
+  "host_permissions": ["http://localhost:7842/*", "<all_urls>"],
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_badge_background_color": "#6366f1"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  }
+}
