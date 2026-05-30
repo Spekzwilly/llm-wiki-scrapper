@@ -11,30 +11,34 @@ Browser (extension)  →  POST /ingest  →  bridge/server.py  →  claude -p /l
 ```
 
 ### Extension (`extension/`)
-- `manifest.json` — MV3, permissions: activeTab, scripting, storage, tabs; host: localhost:7842
+- `manifest.json` — MV3, permissions: activeTab, scripting, storage, tabs; host: localhost:7842; includes custom icons (`icons/`)
 - `content.js` — mouseup listener → tooltip → stores highlights in `chrome.storage.local` keyed by URL; responds to `getPageContent` message with `document.body.innerText`
 - `background.js` — badge count management; refreshes on tab switch/load
-- `popup.js` — loads tab metadata + stored highlights; calls `getPageContent` → POST to bridge → polls `/status` every 2s
-- `popup.html` — views: form, saving, processing, success, duplicate, error, no-content
+- `popup.js` — loads tab metadata; detects PDF tabs via `isPdfUrl()`; calls `getPageContent` for articles or sends `type:"pdf"` for PDFs → POST to bridge → polls `/status` every 2s
+- `popup.html` — views: form, saving, processing, success, duplicate, error, no-content; `#highlights-section` hidden for PDFs; `#pdf-badge` shown for PDFs
 
 ### Bridge server (`bridge/`)
 - `server.py` — Python stdlib HTTP server on `localhost:7842`
-  - `POST /ingest` — validates body `{title, url, content, note, highlights}`, writes `~/LLMwiki/sources/<Title>.md`, spawns Claude in background thread
+  - `POST /ingest` — accepts `{title, url, content, note, highlights}` for articles OR `{title, url, note, type:"pdf"}` for PDFs; writes `~/LLMwiki/sources/<Title>.md`; spawns Claude in background thread
   - `GET /status` — returns `{state, title, concepts, error}` (idle/processing/done/error)
-  - Duplicate detection: checks existing sources files for matching `url:` frontmatter
+  - PDF extraction: `extract_pdf_text(url)` downloads PDF bytes via `urllib.request` and extracts text with `pymupdf`; returns 502 on failure
+  - Duplicate detection: checks existing sources files for matching `url:` frontmatter (type-agnostic)
   - Claude command: `claude --dangerously-skip-permissions -p "/llmwiki-ingest --source-file <path>"` with `cwd=~/LLMwiki`
+- `requirements.txt` — pip dependencies (`pymupdf`)
 - `install.sh` — installs launchd plist so bridge auto-starts on login
 - `com.llmwiki.bridge.plist` — launchd service definition
 
 ### Vault layout (`~/LLMwiki/`)
-- `sources/` — raw saved articles as `.md` with YAML frontmatter (title, url, saved, type, personal-note, highlights)
+- `sources/` — raw saved content as `.md` with YAML frontmatter (title, url, saved, type, personal-note, highlights); `type: article` or `type: pdf`
 - `bridge.log` — one line per ingestion event
 
 ## Key flows
 
 **Save article**: popup opens → title/url auto-filled → user adds note → clicks Save → content.js returns `innerText` → bridge writes sources file → responds 200 → Claude processes async → macOS notification fires → popup polls done
 
-**Highlights**: select text → tooltip appears → click → stored in chrome.storage → shown in popup → sent as array in `highlights:` frontmatter
+**Save PDF**: popup detects `.pdf` URL → hides highlights, shows PDF badge → user adds note → clicks Save → bridge downloads + extracts PDF text via pymupdf → writes sources file with `type: pdf` → Claude processes async → macOS notification fires
+
+**Highlights**: select text on article page → tooltip appears → click → stored in chrome.storage → shown in popup → sent as array in `highlights:` frontmatter (not available for PDFs)
 
 ## Spectra
 
