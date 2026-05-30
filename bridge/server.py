@@ -8,8 +8,11 @@ import re
 import shutil
 import subprocess
 import threading
+import urllib.request
 from datetime import date, datetime
 from pathlib import Path
+
+import fitz  # pymupdf
 
 VAULT = Path.home() / "LLMwiki"
 SOURCES = VAULT / "sources"
@@ -38,6 +41,14 @@ def _get_status() -> dict:
         return dict(_status)
 
 
+def extract_pdf_text(url: str) -> str:
+    """Download a PDF from url and return concatenated page text."""
+    with urllib.request.urlopen(url, timeout=30) as resp:
+        pdf_bytes = resp.read()
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    return "\n\n".join(page.get_text() for page in doc)
+
+
 def to_safe_title(text: str) -> str:
     """Title Case with special characters removed."""
     cleaned = re.sub(r"[^\w\s-]", "", text)
@@ -57,8 +68,8 @@ def find_existing_url(url: str) -> bool:
     return False
 
 
-def write_sources_file(title: str, url: str, content: str, note: str, highlights: list) -> Path:
-    """Write article to ~/LLMwiki/sources/<Title>.md with YAML frontmatter."""
+def write_sources_file(title: str, url: str, content: str, note: str, highlights: list, source_type: str = "article") -> Path:
+    """Write article/PDF to ~/LLMwiki/sources/<Title>.md with YAML frontmatter."""
     SOURCES.mkdir(parents=True, exist_ok=True)
     safe_title = to_safe_title(title)
     path = SOURCES / f"{safe_title}.md"
@@ -73,7 +84,7 @@ def write_sources_file(title: str, url: str, content: str, note: str, highlights
         f"title: {title}\n"
         f"url: {url}\n"
         f"saved: {date.today().isoformat()}\n"
-        f"type: article\n"
+        f"type: {source_type}\n"
         f"personal-note: {note or ''}\n"
         f"{highlights_yaml}"
         f"---\n\n"
@@ -170,20 +181,37 @@ class IngestHandler(http.server.BaseHTTPRequestHandler):
 
         title = body.get("title", "").strip()
         url = body.get("url", "").strip()
-        content = body.get("content", "").strip()
         note = body.get("note", "")
         highlights = body.get("highlights", [])
+        source_type = body.get("type", "article")
 
-        if not title or not url or not content:
-            self._send_json(400, {"error": "missing required fields: title, url, content"})
-            return
+        if source_type == "pdf":
+            if not title or not url:
+                self._send_json(400, {"error": "missing required fields: title, url"})
+                return
 
-        if find_existing_url(url):
-            self._send_json(409, {"error": "URL already saved"})
-            return
+            if find_existing_url(url):
+                self._send_json(409, {"error": "URL already saved"})
+                return
+
+            try:
+                content = extract_pdf_text(url)
+            except Exception as e:
+                log.error("PDF extraction failed for %s: %s", url, e)
+                self._send_json(502, {"error": "pdf extraction failed"})
+                return
+        else:
+            content = body.get("content", "").strip()
+            if not title or not url or not content:
+                self._send_json(400, {"error": "missing required fields: title, url, content"})
+                return
+
+            if find_existing_url(url):
+                self._send_json(409, {"error": "URL already saved"})
+                return
 
         try:
-            sources_path = write_sources_file(title, url, content, note, highlights)
+            sources_path = write_sources_file(title, url, content, note, highlights, source_type)
         except Exception as e:
             log.error("Failed to write sources file: %s", e)
             self._send_json(500, {"error": "failed to write sources file"})

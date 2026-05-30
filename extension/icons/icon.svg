@@ -1,0 +1,18 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="128" height="128" rx="28" fill="#1a0f16"/>
+  <circle cx="64" cy="66" r="46" fill="#be185d" opacity="0.14"/>
+  <!-- left lobe -->
+  <path d="M64 28 C44 28 28 44 28 62 C28 73 34 82 44 87 C44 91 43 97 46 100 C50 104 55 102 58 99 C60 102 62 104 64 104 L64 28Z" fill="#be185d"/>
+  <!-- right lobe -->
+  <path d="M64 28 C84 28 100 44 100 62 C100 73 94 82 84 87 C84 91 85 97 82 100 C78 104 73 102 70 99 C68 102 66 104 64 104 L64 28Z" fill="#f9a8d4"/>
+  <!-- center divider -->
+  <line x1="64" y1="28" x2="64" y2="104" stroke="#1a0f16" stroke-width="3"/>
+  <!-- sulci left -->
+  <path d="M36 52 C42 50 50 55 47 63" stroke="white" stroke-width="2" fill="none" opacity="0.3" stroke-linecap="round"/>
+  <path d="M32 70 C39 67 47 73 44 80" stroke="white" stroke-width="2" fill="none" opacity="0.3" stroke-linecap="round"/>
+  <!-- sulci right -->
+  <path d="M92 52 C86 50 78 55 81 63" stroke="white" stroke-width="2" fill="none" opacity="0.3" stroke-linecap="round"/>
+  <path d="M96 70 C89 67 81 73 84 80" stroke="white" stroke-width="2" fill="none" opacity="0.3" stroke-linecap="round"/>
+  <!-- spark -->
+  <path d="M64 14 L67.5 22 L76 22 L69.5 27 L72 35 L64 30 L56 35 L58.5 27 L52 22 L60.5 22 Z" fill="#fce7f3"/>
+</svg>

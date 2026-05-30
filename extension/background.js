@@ -35,6 +35,6 @@ function setBadge(tabId, count) {
   const opts = tabId != null ? { text, tabId } : { text };
   chrome.action.setBadgeText(opts);
   if (count > 0 && tabId != null) {
-    chrome.action.setBadgeBackgroundColor({ color: '#6366f1', tabId });
+    chrome.action.setBadgeBackgroundColor({ color: '#be185d', tabId });
   }
 }

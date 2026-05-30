@@ -93,7 +93,7 @@
       transition: border-color 0.15s;
     }
     .note-input::placeholder { color: #45475a; }
-    .note-input:focus { border-color: rgba(99,102,241,0.5); }
+    .note-input:focus { border-color: rgba(190,24,93,0.5); }
 
     /* Highlights list */
     .highlights-list {
@@ -106,8 +106,8 @@
       display: flex;
       align-items: flex-start;
       gap: 6px;
-      background: rgba(99,102,241,0.08);
-      border: 1px solid rgba(99,102,241,0.15);
+      background: rgba(190,24,93,0.08);
+      border: 1px solid rgba(190,24,93,0.15);
       border-radius: 6px;
       padding: 7px 8px;
     }
@@ -149,7 +149,7 @@
     .save-btn {
       width: 100%;
       padding: 10px;
-      background: #6366f1;
+      background: #be185d;
       border: none;
       border-radius: 8px;
       color: #fff;
@@ -159,7 +159,7 @@
       transition: background 0.15s, opacity 0.15s;
       font-family: inherit;
     }
-    .save-btn:hover:not(:disabled) { background: #818cf8; }
+    .save-btn:hover:not(:disabled) { background: #f472b6; }
     .save-btn:disabled { opacity: 0.6; cursor: default; }
 
     /* Status states */
@@ -195,14 +195,14 @@
     }
     .concept-item::before {
       content: '·';
-      color: #6366f1;
+      color: #be185d;
       font-weight: bold;
     }
 
     .spinner {
       width: 28px; height: 28px;
-      border: 3px solid rgba(99,102,241,0.3);
-      border-top-color: #6366f1;
+      border: 3px solid rgba(190,24,93,0.3);
+      border-top-color: #be185d;
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
     }
@@ -224,7 +224,9 @@
     <div id="view-form">
       <div class="meta">
         <textarea id="title-input" class="title-input" rows="2" placeholder="Article title"></textarea>
-        <div id="url-display" class="url-line"></div>
+        <div id="url-display" class="url-line">
+          <span id="url-text"></span><span id="pdf-badge" class="hidden" style="margin-left:6px;background:#be185d;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;vertical-align:middle;letter-spacing:0.05em;">PDF</span>
+        </div>
       </div>
 
       <div class="section">
@@ -232,7 +234,7 @@
         <textarea id="note-input" class="note-input" placeholder="Why is this interesting?"></textarea>
       </div>
 
-      <div class="section">
+      <div id="highlights-section" class="section">
         <div class="section-label">Highlights</div>
         <div id="highlights-list" class="highlights-list"></div>
       </div>

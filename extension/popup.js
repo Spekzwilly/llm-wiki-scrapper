@@ -5,6 +5,11 @@ const STATUS = 'http://localhost:7842/status';
 
 let currentUrl = '';
 let currentTabId = null;
+let currentIsPdf = false;
+
+function isPdfUrl(url) {
+  return /\.pdf(\?|$)/i.test(url);
+}
 
 async function init() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -12,12 +17,18 @@ async function init() {
 
   currentUrl = tab.url || '';
   currentTabId = tab.id;
+  currentIsPdf = isPdfUrl(currentUrl);
 
   // Fill metadata
   document.getElementById('title-input').value = tab.title || '';
-  document.getElementById('url-display').textContent = currentUrl;
+  document.getElementById('url-text').textContent = currentUrl;
 
-  // Load highlights from storage
+  if (currentIsPdf) {
+    document.getElementById('highlights-section').classList.add('hidden');
+    document.getElementById('pdf-badge').classList.remove('hidden');
+  }
+
+  // Load highlights from storage (no-op for PDFs but harmless)
   await renderHighlights();
 
   // If the last ingestion finished for this tab's title, show the result instead of the form
@@ -159,10 +170,16 @@ async function save() {
   const stored = await chrome.storage.local.get([key]);
   const highlights = stored[key] || [];
 
-  const content = await getPageContent();
-  if (!content) {
-    showView('view-no-content');
-    return;
+  let payload;
+  if (currentIsPdf) {
+    payload = { title, url: currentUrl, note, type: 'pdf' };
+  } else {
+    const content = await getPageContent();
+    if (!content) {
+      showView('view-no-content');
+      return;
+    }
+    payload = { title, url: currentUrl, content, highlights, note };
   }
 
   showView('view-saving');
@@ -172,7 +189,7 @@ async function save() {
     const res = await fetch(BRIDGE, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, url: currentUrl, content, highlights, note }),
+      body: JSON.stringify(payload),
     });
 
     if (res.ok) {
