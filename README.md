@@ -38,20 +38,18 @@ extension/
 2. Enable **Developer mode**
 3. Click **Load unpacked** and select the `extension/` folder
 
-### 2. Start the bridge server
+### 2. Install the bridge server (one-time)
 
-**Manually (one-off):**
 ```bash
-python3 bridge/server.py
-```
-
-**Auto-start at login (recommended):**
-```bash
+pip3 install pymupdf
 bash bridge/install.sh
 ```
 
+This registers the bridge as a macOS launchd service. After this, **no further commands are needed** — the server starts automatically at every login (including after a restart) and restarts itself if it ever crashes.
+
 The bridge server runs on `localhost:7842` and requires:
-- Python 3 (stdlib only — no pip installs needed)
+- Python 3 (Homebrew: `/opt/homebrew/bin/python3`)
+- `pymupdf` (`pip3 install pymupdf`) — for PDF text extraction
 - `claude` CLI on your PATH
 - `~/LLMwiki/` vault with the `llmwiki-ingest` skill installed
 
@@ -67,4 +65,4 @@ Activity and errors are written to `~/LLMwiki/bridge.log`.
 
 ## Out of scope (v1)
 
-YouTube transcripts, PDFs, Safari/Firefox, multi-vault, cloud sync.
+YouTube transcripts, Safari/Firefox, multi-vault, cloud sync.
