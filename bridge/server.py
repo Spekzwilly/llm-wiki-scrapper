@@ -13,6 +13,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 import fitz  # pymupdf
+from youtube_transcript_api import YouTubeTranscriptApi
 
 VAULT = Path.home() / "LLMwiki"
 SOURCES = VAULT / "sources"
@@ -47,6 +48,19 @@ def extract_pdf_text(url: str) -> str:
         pdf_bytes = resp.read()
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     return "\n\n".join(page.get_text() for page in doc)
+
+
+def extract_youtube_transcript(url: str) -> str:
+    """Fetch and join transcript text for a YouTube video URL, stripping timestamps."""
+    match = re.search(r"[?&]v=([^&]+)", url)
+    if not match:
+        raise ValueError(f"Could not parse video ID from URL: {url}")
+    video_id = match.group(1)
+    api = YouTubeTranscriptApi()
+    transcript_list = api.list(video_id)
+    transcript = next(iter(transcript_list))
+    fetched = transcript.fetch()
+    return " ".join(snippet.text for snippet in fetched.snippets)
 
 
 def to_safe_title(text: str) -> str:
@@ -108,10 +122,10 @@ def trigger_claude(sources_path: Path, title: str, url: str) -> None:
     """Spawn claude as a background process; notify via osascript when done."""
     _set_status(state="processing", title=title, concepts=[], error="")
 
-    cmd = ["claude", "--dangerously-skip-permissions", "-p", f"/llmwiki-ingest --source-file {sources_path}"]
+    cmd = ["claude", "--dangerously-skip-permissions", "-p", f'/llmwiki-ingest --source-file "{sources_path}"']
     notify_msg = "Ingestion complete"
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300, cwd=str(VAULT))
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=600, cwd=str(VAULT))
         output = result.stdout
 
         # Extract concept names from summary table rows
@@ -123,7 +137,9 @@ def trigger_claude(sources_path: Path, title: str, url: str) -> None:
             _set_status(state="done", concepts=concepts)
             append_log(title, url, f"success ({count} concepts)")
         else:
-            _set_status(state="error", error=f"Claude exited {result.returncode}")
+            error_detail = (result.stderr or "").strip().splitlines()[-1] if result.stderr else ""
+            log.error("Claude stderr: %s", result.stderr)
+            _set_status(state="error", error=f"Claude exited {result.returncode}" + (f": {error_detail}" if error_detail else ""))
             append_log(title, url, f"exit {result.returncode}")
     except subprocess.TimeoutExpired:
         notify_msg = "Ingestion timed out"
@@ -185,7 +201,22 @@ class IngestHandler(http.server.BaseHTTPRequestHandler):
         highlights = body.get("highlights", [])
         source_type = body.get("type", "article")
 
-        if source_type == "pdf":
+        if source_type == "youtube":
+            if not title or not url:
+                self._send_json(400, {"error": "missing required fields: title, url"})
+                return
+
+            if find_existing_url(url):
+                self._send_json(409, {"error": "URL already saved"})
+                return
+
+            try:
+                content = extract_youtube_transcript(url)
+            except Exception as e:
+                log.error("YouTube transcript extraction failed for %s: %s", url, e)
+                self._send_json(502, {"error": "No transcript available for this video"})
+                return
+        elif source_type == "pdf":
             if not title or not url:
                 self._send_json(400, {"error": "missing required fields: title, url"})
                 return

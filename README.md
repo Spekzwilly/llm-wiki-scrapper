@@ -1,6 +1,6 @@
 # LLMwiki Chrome Extension
 
-A personal Chrome extension that saves articles to your [LLMwiki](https://obsidian.md/) vault with one click. Highlight passages, add a personal note, and click Save — Claude extracts concepts and updates your wiki automatically, with a macOS notification when it's done.
+A personal Chrome extension that saves articles, PDFs, and YouTube videos to your [LLMwiki](https://obsidian.md/) vault with one click. Highlight passages, add a personal note, and click Save — Claude extracts concepts and updates your wiki automatically, with a macOS notification when it's done.
 
 ## How it works
 
@@ -10,8 +10,8 @@ Chrome Extension  →  Bridge Server (localhost:7842)  →  ~/LLMwiki/sources/
                                                       →  macOS notification
 ```
 
-1. Click the extension icon on any article page
-2. Optionally highlight passages and add a personal note
+1. Click the extension icon on any article, PDF, or YouTube video page
+2. Optionally highlight passages and add a personal note (highlights not available for PDFs or YouTube)
 3. Click **Save** — the bridge server writes a sources file and triggers Claude in the background
 4. A macOS notification confirms how many concepts were added or enriched
 
@@ -41,7 +41,7 @@ extension/
 ### 2. Install the bridge server (one-time)
 
 ```bash
-pip3 install pymupdf
+pip3 install -r bridge/requirements.txt
 bash bridge/install.sh
 ```
 
@@ -49,7 +49,8 @@ This registers the bridge as a macOS launchd service. After this, **no further c
 
 The bridge server runs on `localhost:7842` and requires:
 - Python 3 (Homebrew: `/opt/homebrew/bin/python3`)
-- `pymupdf` (`pip3 install pymupdf`) — for PDF text extraction
+- `pymupdf` — for PDF text extraction
+- `youtube-transcript-api` — for YouTube transcript extraction (no API key needed)
 - `claude` CLI on your PATH
 - `~/LLMwiki/` vault with the `llmwiki-ingest` skill installed
 
@@ -82,4 +83,4 @@ Defined in `~/LLMwiki/CLAUDE.md §Tags`. Ingest assigns tags at creation; lint a
 
 ## Out of scope (v1)
 
-YouTube transcripts, Safari/Firefox, multi-vault, cloud sync.
+Safari/Firefox, multi-vault, cloud sync.

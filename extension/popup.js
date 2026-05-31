@@ -6,9 +6,14 @@ const STATUS = 'http://localhost:7842/status';
 let currentUrl = '';
 let currentTabId = null;
 let currentIsPdf = false;
+let currentIsYoutube = false;
 
 function isPdfUrl(url) {
   return /\.pdf(\?|$)/i.test(url);
+}
+
+function isYoutubeUrl(url) {
+  return /youtube\.com\/watch/.test(url);
 }
 
 async function init() {
@@ -18,6 +23,7 @@ async function init() {
   currentUrl = tab.url || '';
   currentTabId = tab.id;
   currentIsPdf = isPdfUrl(currentUrl);
+  currentIsYoutube = isYoutubeUrl(currentUrl);
 
   // Fill metadata
   document.getElementById('title-input').value = tab.title || '';
@@ -26,6 +32,9 @@ async function init() {
   if (currentIsPdf) {
     document.getElementById('highlights-section').classList.add('hidden');
     document.getElementById('pdf-badge').classList.remove('hidden');
+  } else if (currentIsYoutube) {
+    document.getElementById('highlights-section').classList.add('hidden');
+    document.getElementById('youtube-badge').classList.remove('hidden');
   }
 
   // Load highlights from storage (no-op for PDFs but harmless)
@@ -171,7 +180,9 @@ async function save() {
   const highlights = stored[key] || [];
 
   let payload;
-  if (currentIsPdf) {
+  if (currentIsYoutube) {
+    payload = { title, url: currentUrl, note, type: 'youtube' };
+  } else if (currentIsPdf) {
     payload = { title, url: currentUrl, note, type: 'pdf' };
   } else {
     const content = await getPageContent();
