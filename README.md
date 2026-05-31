@@ -63,6 +63,23 @@ curl http://localhost:7842/status
 
 Activity and errors are written to `~/LLMwiki/bridge.log`.
 
+## Claude skills
+
+Three skills work together inside the vault (invoke via `claude` from `~/LLMwiki`):
+
+| Skill | Trigger | What it does |
+|-------|---------|-------------|
+| `/llmwiki-ingest` | Chrome extension save | Saves source, extracts concepts, writes wiki entries with tags |
+| `/llmwiki-query` | Manual | Answers questions grounded in vault content with `[[wikilink]]` citations |
+| `/llmwiki-lint` | Manual | Audits vault health — orphaned entries, missing pages, contradiction signals |
+
+### Tag taxonomy
+
+All wiki entries carry canonical YAML frontmatter tags:
+`strategy` · `execution` · `communication` · `knowledge-management` · `frameworks` · `principles` · `mental-models`
+
+Defined in `~/LLMwiki/CLAUDE.md §Tags`. Ingest assigns tags at creation; lint and query are tag-aware.
+
 ## Out of scope (v1)
 
 YouTube transcripts, Safari/Firefox, multi-vault, cloud sync.

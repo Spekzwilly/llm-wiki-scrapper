@@ -31,6 +31,17 @@ Browser (extension)  →  POST /ingest  →  bridge/server.py  →  claude -p /l
 ### Vault layout (`~/LLMwiki/`)
 - `sources/` — raw saved content as `.md` with YAML frontmatter (title, url, saved, type, personal-note, highlights); `type: article` or `type: pdf`
 - `bridge.log` — one line per ingestion event
+- `CLAUDE.md` — vault governance: layer rules, operations, tag taxonomy (`## Tags`), prohibitions (`## Never do`)
+
+### Claude skills (`~/.claude/skills/`)
+
+| Skill | Invocation | Purpose |
+|-------|-----------|---------|
+| `llmwiki-ingest` | Bridge server / direct | Save source, extract concepts, write tagged entries |
+| `llmwiki-query` | Manual (`cd ~/LLMwiki && claude`) | Answer questions grounded in vault content with `[[wikilink]]` citations; optionally file answer as new entry |
+| `llmwiki-lint` | Manual (`cd ~/LLMwiki && claude`) | Read-only vault health audit: orphaned entries, missing pages, contradiction signals |
+
+**Tag taxonomy**: canonical tags (`strategy`, `execution`, `communication`, `knowledge-management`, `frameworks`, `principles`, `mental-models`) defined in `~/LLMwiki/CLAUDE.md §Tags`. All wiki entries carry YAML frontmatter `tags: [...]`.
 
 ## Key flows
 
